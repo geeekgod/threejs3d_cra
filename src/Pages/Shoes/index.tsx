@@ -134,7 +134,11 @@ const ShoesContainer = () => {
       console.log('rendering');
       contextRef.current = canvasRef.current.getContext('2d');
       const constraints = {
-        video: { width: { min: 1280 }, height: { min: 720 } },
+        video: {
+          width: { min: 1280 }, height: { min: 720 }, video: {
+            facingMode: { exact: "environment" }
+          }
+        },
       };
       navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
         if (inputVideoRef.current) {
