@@ -135,95 +135,95 @@ const ShoesContainer = () => {
       contextRef.current = canvasRef.current.getContext('2d');
       const constraints = {
         video: {
-          width: { min: 1280 }, height: { min: 720 }, video: {
-            facingMode: { exact: "environment" }
-          }
-        },
-      };
-      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-        if (inputVideoRef.current) {
-          inputVideoRef.current.srcObject = stream;
+          facingMode: 'environment',
+          width: { min: 1280 }, height: { min: 720 },
         }
-        sendToMediaPipe();
-      });
+      },
+    };
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      if (inputVideoRef.current) {
+        inputVideoRef.current.srcObject = stream;
+      }
+      sendToMediaPipe();
+    });
 
-      const objectron = new Objectron({
-        locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/objectron@${VERSION}/${file}`
-        }
-      });
+    const objectron = new Objectron({
+      locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/objectron@${VERSION}/${file}`
+      }
+    });
 
-      objectron.setOptions({
-        selfieMode: false,
-        modelName: 'Shoe',
-        maxNumObjects: 2,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.99,
-      });
+    objectron.setOptions({
+      selfieMode: false,
+      modelName: 'Shoe',
+      maxNumObjects: 2,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.99,
+    });
 
-      objectron.onResults(onResults);
+    objectron.onResults(onResults);
 
-      const sendToMediaPipe = async () => {
-        if (inputVideoRef.current) {
-          if (!inputVideoRef.current.videoWidth) {
-            requestAnimationFrame(sendToMediaPipe);
-          } else {
-            await objectron.send({ image: inputVideoRef.current });
-            requestAnimationFrame(sendToMediaPipe);
-          }
-        }
-      };
-    }
-  }, [inputVideoReady]);
-
-  const onResults = (results: any) => {
-    // console.log(results)
-    if (canvasRef.current && contextRef.current) {
-      setLoaded(true);
-
-      contextRef.current.save();
-      contextRef.current.drawImage(
-        results.image, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      if (!!results.objectDetections) {
-        for (const detectedObject of results.objectDetections) {
-          // Reformat keypoint information as landmarks, for easy drawing.
-          const landmarks =
-            detectedObject.keypoints.map((x: any) => x.point2d);
-          // Draw bounding box.
-          drawConnectors(contextRef.current, landmarks,
-            BOX_CONNECTIONS, { color: '#FF0000' });
-
-          // Draw Axes
-          drawAxes(contextRef.current, landmarks, {
-            x: '#00FF00',
-            y: '#FF0000',
-            z: '#0000FF',
-          });
-          // Draw centroid.
-          drawLandmarks(contextRef.current, [landmarks[0]], { color: '#FFFFFF' });
+    const sendToMediaPipe = async () => {
+      if (inputVideoRef.current) {
+        if (!inputVideoRef.current.videoWidth) {
+          requestAnimationFrame(sendToMediaPipe);
+        } else {
+          await objectron.send({ image: inputVideoRef.current });
+          requestAnimationFrame(sendToMediaPipe);
         }
       }
-      contextRef.current.restore();
-    }
-  };
+    };
+  }
+  }, [inputVideoReady]);
 
-  return (
-    <div className="shoes-container">
-      <video
-        autoPlay
-        ref={(el) => {
-          inputVideoRef.current = el;
-          setInputVideoReady(!!el);
-        }}
-      />
-      <canvas ref={canvasRef} width={1280} height={720} />
-      {!loaded && (
-        <div className="loading">
-          <div className="spinner"></div>
-        </div>
-      )}
-    </div>
-  );
+const onResults = (results: any) => {
+  // console.log(results)
+  if (canvasRef.current && contextRef.current) {
+    setLoaded(true);
+
+    contextRef.current.save();
+    contextRef.current.drawImage(
+      results.image, 0, 0, canvasRef.current.width, canvasRef.current.height);
+    if (!!results.objectDetections) {
+      for (const detectedObject of results.objectDetections) {
+        // Reformat keypoint information as landmarks, for easy drawing.
+        const landmarks =
+          detectedObject.keypoints.map((x: any) => x.point2d);
+        // Draw bounding box.
+        drawConnectors(contextRef.current, landmarks,
+          BOX_CONNECTIONS, { color: '#FF0000' });
+
+        // Draw Axes
+        drawAxes(contextRef.current, landmarks, {
+          x: '#00FF00',
+          y: '#FF0000',
+          z: '#0000FF',
+        });
+        // Draw centroid.
+        drawLandmarks(contextRef.current, [landmarks[0]], { color: '#FFFFFF' });
+      }
+    }
+    contextRef.current.restore();
+  }
+};
+
+return (
+  <div className="shoes-container">
+    <video
+      autoPlay
+      ref={(el) => {
+        inputVideoRef.current = el;
+        setInputVideoReady(!!el);
+      }}
+    />
+    <canvas ref={canvasRef} width={1280} height={720} />
+    {!loaded && (
+      <div className="loading">
+        <div className="spinner"></div>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default ShoesContainer;
